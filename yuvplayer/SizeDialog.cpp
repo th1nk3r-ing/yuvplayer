@@ -42,8 +42,8 @@ IMPLEMENT_DYNAMIC(CSizeDialog, CDialog)
 
 CSizeDialog::CSizeDialog(CWnd* pParent /*=NULL*/)
 	: CDialog(CSizeDialog::IDD, pParent)
-	, width(4096)
-	, height(2048)
+	, width(3840)
+	, height(2160)
 {
 
 }
@@ -56,9 +56,9 @@ void CSizeDialog::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	DDX_Text(pDX, IDC_WIDTH, width);
-	DDV_MinMaxUInt(pDX, width, 1, 4096);
+	DDV_MinMaxUInt(pDX, width, 1, 8192);
 	DDX_Text(pDX, IDC_HEIGHT, height);
-	DDV_MinMaxUInt(pDX, height, 1, 4096);
+	DDV_MinMaxUInt(pDX, height, 1, 8192);
 }
 
 
