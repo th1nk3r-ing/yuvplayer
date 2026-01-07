@@ -198,7 +198,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "C&ustom",                     ID_SIZE_CUSTOM
     END
-    POPUP "&Color"
+    POPUP "&Format"
     BEGIN
         MENUITEM "YUV420 10bitLE",              ID_COLOR_YUV420_10LE
         MENUITEM "YUV420 10bitBE",              ID_COLOR_YUV420_10BE
