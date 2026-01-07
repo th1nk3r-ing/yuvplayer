@@ -4,6 +4,8 @@ Lightweight YUV player which supports various YUV format
 
 Supporting Format
 * Planar format
+* YUV420 10bitLE
+* YUV420 10bitBE
 * YUV420 (YV12)
 * YUV422 (YV16)
 * YUV444
@@ -17,9 +19,10 @@ Supporting Format
 * NV21
 * UYVY
 * VYUY
+* P010 (10bit YUV420)
 
 Supporting Feature
-* Zoom (4:1 ~ 1:4)
+* Zoom (8:1 ~ 1:8)
 * Store frame to YUV/BMP
 
 Hot key

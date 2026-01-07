@@ -551,11 +551,16 @@ void CyuvplayerDlg::OnColor(UINT nID )
 			m_color = YUV420_10LE;
 			break;
         
-		case ID_COLOR_YUV420_10BE:
+        case ID_COLOR_YUV420_10BE:
 			menu->CheckMenuItem( ID_COLOR_YUV420_10BE, MF_CHECKED);
 			m_color = YUV420_10BE;
 			break;
-        
+
+		case ID_COLOR_YUV420_P010:
+			menu->CheckMenuItem( ID_COLOR_YUV420_P010, MF_CHECKED);
+			m_color = YUV420_P010;
+			break;
+
 		case ID_COLOR_YUV444:
 			menu->CheckMenuItem( ID_COLOR_YUV444, MF_CHECKED);
 			m_color = YUV444;
@@ -641,15 +646,15 @@ void CyuvplayerDlg::UpdateParameter()
 		frame_size_uv = width*height;
 	else if (m_color == YUV422 || m_color == UYVY || m_color == YUYV)
 		frame_size_uv = ((width+1)>>1)*height;
-	else if (m_color == YUV420 || m_color == NV12 || m_color == NV21 || m_color == YUV420_10LE || m_color == YUV420_10BE)
+	else if (m_color == YUV420 || m_color == NV12 || m_color == NV21 || m_color == YUV420_10LE || m_color == YUV420_10BE || m_color == YUV420_P010)
 		frame_size_uv = ((width+1)>>1) * ((height+1)>>1);
-	else 
+	else
 		frame_size_uv = 0;
-    
-    if ( m_color == YUV420_10LE || m_color == YUV420_10BE)
+
+    if ( m_color == YUV420_10LE || m_color == YUV420_10BE ||  m_color == YUV420_P010)
     {
         frame_size_y  *= 2;
-        frame_size_uv *= 2; 
+        frame_size_uv *= 2;
     }
 
 	if (m_color == RGB32)
@@ -696,7 +701,7 @@ void CyuvplayerDlg::LoadFrame(void)
 	else if( m_color == YUYV )
 		_read( fd, misc, frame_size_y*2 );
 
-	else if( m_color == NV12 || m_color == NV21)
+	else if( m_color == NV12 || m_color == NV21 || m_color == YUV420_P010)
 	{
 		_read( fd, y,    frame_size_y );
 		_read( fd, misc, frame_size_y/2 );
@@ -890,6 +895,57 @@ void CyuvplayerDlg::yuv2rgb(void)
 				(*cur) = clip(( 298 * c + 516 * d           + (128<<2)) >> 10);cur+=2;
 			}
 			line += t_width<<2;
+		}
+	}
+
+	else if (m_color == YUV420_P010)
+	{
+		// --- 针对标准 P010 (MSB 对齐) 的常数调整 ---
+		const int Y_OFFSET_P010 = 16 << 8;			// 16 位的黑电平
+		const int UV_OFFSET_P010 = 128 << 8;		// 16 位的色度中心
+
+		// 最终位移：
+		// 原公式是 (Coeff * 10bit) >> 10 得到 8bit 结果
+		// 现在输入是 16bit (即 10bit << 6)，所以位移要变成 10 + 6 = 16
+		const int FINAL_SHIFT = 16;
+		const int ROUND_BIT = 1 << (FINAL_SHIFT - 1); // 1 << 15
+
+		const uint16_t* y_src = (const uint16_t*)y;
+		const uint16_t* uv_src = (const uint16_t*)misc;
+
+		for (j = 0; j < height; j++)
+		{
+			cur = line;
+			const uint16_t* y_ptr = y_src + j * width;
+			const uint16_t* uv_ptr = uv_src + (j >> 1) * width;
+
+			int d, e, r_uv, g_uv, b_uv;
+
+			for (i = 0; i < width; i++)
+			{
+				// 每两个像素更新一次色度
+				if ((i & 1) == 0)
+				{
+					// 标准 P010 UV 平面也是 16-bit MSB 对齐
+					d = (int)uv_ptr[0] - UV_OFFSET_P010;
+					e = (int)uv_ptr[1] - UV_OFFSET_P010;
+					uv_ptr += 2;
+
+					r_uv = 409 * e + ROUND_BIT;
+					g_uv = -100 * d - 208 * e + ROUND_BIT;
+					b_uv = 516 * d + ROUND_BIT;
+				}
+
+				int c = 298 * ((int)y_ptr[i] - Y_OFFSET_P010);
+
+				// 此时 (c + r_uv) 的结果是基于 16-bit 尺度的，右移 16 位降回 8-bit
+				cur[0] = clip((c + r_uv) >> FINAL_SHIFT);
+				cur[1] = clip((c + g_uv) >> FINAL_SHIFT);
+				cur[2] = clip((c + b_uv) >> FINAL_SHIFT);
+
+				cur += 4;
+			}
+			line += t_width << 2;
 		}
 	}
 

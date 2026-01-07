@@ -55,7 +55,8 @@
 #define ID_COLOR_RGB32                  40011
 #define ID_COLOR_RGB24                  40012
 #define ID_COLOR_RGB16                  40013
-#define ID_COLOR_END                    40013
+#define ID_COLOR_YUV420_P010            40014
+#define ID_COLOR_END                    40014
 
 #define ID_SIZE_START                   40020
 #define ID_SIZE_8K						40020
