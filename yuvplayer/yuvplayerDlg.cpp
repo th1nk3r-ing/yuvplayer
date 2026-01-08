@@ -121,6 +121,29 @@ static const size_info_t size_info[] = {
 	{ L"1920x1088", 1920, 1088, ID_SIZE_CUSTOM },
 	{ L"2560x1600", 2560, 1600, ID_SIZE_CUSTOM },
 
+	{ L"1440x1920", 1440, 1920, ID_SIZE_PHONE_FHD1 },
+	{ L"1080x1920", 1080, 1920, ID_SIZE_PHONE_FHD2 },	  // 16:9，Full HD
+	{ L"720x1080",  720,  1080, ID_SIZE_CUSTOM },  // 3:2，早期设备 / 部分厂商缩放录屏
+	{ L"720x1280",  720,  1280, ID_SIZE_CUSTOM },  // 16:9，720p 传统比例
+	{ L"720x1440",  720,  1440, ID_SIZE_CUSTOM },  // 18:9，低端全面屏
+	{ L"720x1600",  720,  1600, ID_SIZE_CUSTOM },  // 20:9，入门级全面屏
+	{ L"828x1792",  828,  1792, ID_SIZE_CUSTOM },  // 19.5:9，iPhone XR 原生分辨率
+	{ L"1000x2248", 1000, 2248, ID_SIZE_CUSTOM },  // ≈19.5:9，Android 非标准录屏输出
+	{ L"1080x2160", 1080, 2160, ID_SIZE_CUSTOM },  // 18:9，早期全面屏主流
+	{ L"1080x2316", 1080, 2316, ID_SIZE_CUSTOM },  // ≈19.3:9，部分厂商裁剪录屏
+	{ L"1080x2340", 1080, 2340, ID_SIZE_CUSTOM },  // 19.5:9，Android 主流比例
+	{ L"1080x2400", 1080, 2400, ID_SIZE_CUSTOM },  // 20:9，当前 Android 主流
+	{ L"1080x2520", 1080, 2520, ID_SIZE_CUSTOM },  // 21:9，索尼 Xperia 系
+	{ L"1080x2560", 1080, 2560, ID_SIZE_CUSTOM },  // ≈21:9，超长屏 / 非严格标准
+	{ L"1125x2436", 1125, 2436, ID_SIZE_CUSTOM },  // 19.5:9，iPhone X / XS
+	{ L"1242x2688", 1242, 2688, ID_SIZE_CUSTOM },  // 19.5:9，iPhone XS Max
+	{ L"1440x2560", 1440, 2560, ID_SIZE_CUSTOM },  // 16:9，QHD
+	{ L"1440x2880", 1440, 2880, ID_SIZE_CUSTOM },  // 18:9，QHD+ 全面屏
+	{ L"1440x3040", 1440, 3040, ID_SIZE_CUSTOM },  // ≈19:9，部分 Android 旗舰
+	{ L"1440x3120", 1440, 3120, ID_SIZE_CUSTOM },  // 19.5:9，QHD+ 全面屏
+	{ L"1440x3200", 1440, 3200, ID_SIZE_CUSTOM },  // 20:9，高端 Android 主流
+	{ L"1440x3360", 1440, 3360, ID_SIZE_CUSTOM },  // 21:9，超长屏旗舰
+
 	// end delimiter
 	{ NULL, 0, 0, 0 }
 };
@@ -387,6 +410,16 @@ void CyuvplayerDlg::OnSizeChange(UINT nID )
 		case ID_SIZE_WQHD:
 			menu->CheckMenuItem(ID_SIZE_WQHD, MF_CHECKED);
 			Resize(2560, 1440);
+			return;
+
+		case ID_SIZE_PHONE_FHD1:
+			menu->CheckMenuItem(ID_SIZE_PHONE_FHD1, MF_CHECKED);
+			Resize( 1440, 1920 );
+			return;
+
+		case ID_SIZE_PHONE_FHD2:
+			menu->CheckMenuItem(ID_SIZE_PHONE_FHD2, MF_CHECKED);
+			Resize( 1080, 1920 );
 			return;
 
 		case ID_SIZE_FHD:

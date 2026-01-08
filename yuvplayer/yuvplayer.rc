@@ -196,6 +196,9 @@ BEGIN
         MENUITEM "&QCIF    (176x144)",          ID_SIZE_QCIF
         MENUITEM "SMALL (192x256)",             ID_SIZE_192X256
         MENUITEM SEPARATOR
+        MENUITEM "Phone (1440x1920)",           ID_SIZE_PHONE_FHD1
+        MENUITEM "Phone (1080x1920)",           ID_SIZE_PHONE_FHD2
+        MENUITEM SEPARATOR
         MENUITEM "C&ustom",                     ID_SIZE_CUSTOM
     END
     POPUP "&Format"
