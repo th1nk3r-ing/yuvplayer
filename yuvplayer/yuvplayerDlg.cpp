@@ -159,7 +159,7 @@ CyuvplayerDlg::CyuvplayerDlg(CWnd* pParent /*=NULL*/)
 	m_color = YUV420;
 
 	fd = -1;
-	ratio = 1.0;
+	ratio = 0.5;
 
 	segment_option = 0;
 
@@ -244,7 +244,7 @@ BOOL CyuvplayerDlg::OnInitDialog()
 
 	customDlg = new CSizeDialog;
 
-	Resize( DEFAULT_WIDTH, DEFAULT_HEIGHT );
+	Resize( DEFAULT_WIDTH * 2, DEFAULT_HEIGHT * 2);
 
 	if( __argc == 2 )	
 		FileOpen( __targv[1] );
