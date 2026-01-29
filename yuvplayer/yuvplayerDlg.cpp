@@ -42,6 +42,7 @@
 #include <io.h>
 #include <sys/types.h>
 #include <share.h>
+#include <cwctype>
 
 #ifdef SUPPORT_PCRE
 #	include "pcre.h"
@@ -1230,7 +1231,6 @@ void CyuvplayerDlg::OnDestroy()
 
 void CyuvplayerDlg::FileOpen( wchar_t* path )
 {
-	int i, j;
 	wchar_t* file;
 	wchar_t* end;
 
@@ -1270,6 +1270,7 @@ void CyuvplayerDlg::FileOpen( wchar_t* path )
 	wcstol(file, &end, 0);
 
 #ifdef SUPPORT_PCRE
+	int i, j;
 	regex = pcre16_compile((PCRE_SPTR16)L"_(8k|4k|1440p|1080p|720p|wvga|wqvga|vga|qcif|cif|[1-9][0-9]*[x][1-9][0-9]*)_", PCRE_UTF16, &err, &err_offset, NULL);
 
 	if (regex)
@@ -1318,21 +1319,46 @@ void CyuvplayerDlg::FileOpen( wchar_t* path )
 		pcre16_free(regex);
 	}
 #else
-	for (i = 0; size_info[i].string != NULL; i++)
+	// 1. 快速前置检查：如果不包含 'x'，则直接跳过匹配逻辑
+	if (wcschr(file, L'x') != NULL || wcschr(file, L'X') != NULL)
 	{
-		if (wcsstr(file, size_info[i].string) != NULL)
+		bool matched = false;
+		// 2. 首先尝试匹配预设列表 (如 "8k", "7680x4320" 等)
+		for (int i = 0; size_info[i].string != NULL; i++)
 		{
-			// uncheck all size menu items
-			for (j = ID_SIZE_START; j <= ID_SIZE_END; j++)
-				menu->CheckMenuItem(j, MF_UNCHECKED);
+			if (wcsstr(file, size_info[i].string) != NULL)
+			{
+				// 匹配成功，执行 UI 更新和缩放
+				this->_UpdateSizeUIAndResize(menu, size_info[i].width, size_info[i].height, size_info[i].size_id);
+				matched = true;
+				break;
+			}
+		}
 
-			// update SELECTED size
-			menu->CheckMenuItem(size_info[i].size_id, MF_CHECKED);
+		// 3. 如果预设列表没匹配到，尝试动态解析文件名中的 %dx%d
+		if (!matched)
+		{
+			const wchar_t* currentPos = file;
+			while ((currentPos = wcschr(currentPos, L'x')) != NULL)
+			{
+				// 尝试从当前 'x' 位置往前找数字
+				// 技巧：从 x 往前偏移一段距离，寻找符合数字x数字的结构
+				// 比如 1440x1732，我们尝试从 x 前面的字符开始扫描
+				const wchar_t* startSearch = currentPos;
+				while (startSearch > file && iswdigit(*(startSearch - 1))) {
+					startSearch--;
+				}
 
-			// reallocate memory
-			Resize(size_info[i].width, size_info[i].height);
-
-			break;
+				int w = 0, h = 0;
+				if (this->_TryParseResolution(startSearch, w, h)) {
+					if (w > 0 && h > 0) {
+						this->_UpdateSizeUIAndResize(menu, w, h, 0);
+						matched = true;
+						break;
+					}
+				}
+				currentPos++; // 如果这个 x 不行，找下一个 x
+			}
 		}
 	}
 #endif
@@ -1340,6 +1366,80 @@ void CyuvplayerDlg::FileOpen( wchar_t* path )
 	UpdateParameter();
 	LoadFrame();
 }
+
+
+
+void CyuvplayerDlg::_UpdateSizeUIAndResize(CMenu* menu, int w, int h, UINT size_id)
+{
+	// 取消所有已有勾选
+	for (int j = ID_SIZE_START; j <= ID_SIZE_END; j++)
+		menu->CheckMenuItem(j, MF_UNCHECKED);
+
+	// 如果匹配的是预设 ID，则勾选对应菜单
+	if (size_id >= ID_SIZE_START && size_id <= ID_SIZE_END) {
+		menu->CheckMenuItem(size_id, MF_CHECKED);
+	} else { // 非预设 ID, 更新 custom 的宽高
+		customDlg->width = w;
+		customDlg->height = h;
+	}
+
+	// 执行实际的重置大小函数
+	Resize(w, h);
+}
+
+
+bool CyuvplayerDlg::_TryParseResolution(const wchar_t* text, int& w, int& h)
+{
+	if (!text) return false;
+
+	const wchar_t* p = text;
+
+	// 1. 解析 width
+	int width = 0;
+	int digits = 0;
+	while (iswdigit(static_cast<wint_t>(*p)))
+	{
+		width = width * 10 + (*p - L'0');
+		++p;
+		++digits;
+
+		// 防止异常超长数字
+		if (digits > 6) return false;
+	}
+
+	if (digits == 0 || *p != L'x')
+		return false;
+
+	++p; // skip 'x'
+
+	// 2. 解析 height
+	int height = 0;
+	digits = 0;
+	while (iswdigit(static_cast<wint_t>(*p)))
+	{
+		height = height * 10 + (*p - L'0');
+		++p;
+		++digits;
+
+		if (digits > 6) return false;
+	}
+
+	if (digits == 0)
+		return false;
+
+	// 3. 尾部必须是边界（字符串结束或分隔符）
+	if (*p != L'\0' && iswdigit(static_cast<wint_t>(*p)))
+		return false;
+
+	if (width <= 0 || height <= 0)
+		return false;
+
+	w = width;
+	h = height;
+	return true;
+}
+
+
 void CyuvplayerDlg::OnDropFiles(HDROP hDropInfo)
 {
 	// TODO: Add your message handler code here and/or call defaultTCHAR szFileName[_MAX_PATH];

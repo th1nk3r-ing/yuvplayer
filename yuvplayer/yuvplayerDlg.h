@@ -127,6 +127,8 @@ private:
 	void rgb2yuv422();
 	void rgb2yuv420();
 	void OnCmenuSaveYuv( color_format type );
+	void _UpdateSizeUIAndResize(CMenu* menu, int w, int h, UINT size_id);
+	bool _TryParseResolution(const wchar_t* text, int& w, int& h);
 
 	COpenGLView* OpenGLView;
 
